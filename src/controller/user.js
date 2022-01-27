@@ -66,7 +66,7 @@ router.get('/user/login', (req, res) => {
             const token = jwt.sign({ id: user.id }, SECRET, {
                 expiresIn: expiresIn
             })
-            res.json({ auth: true, token: token, expiresIn: expiresIn, id: user.id })
+            res.json({ status: 200, auth: true, token: token, expiresIn: expiresIn, id: user.id })
         }
         else {
             res.json({ message: "Invalid credential", status: 400, success: false })
