@@ -95,15 +95,6 @@ router.get('/user/refreshtoken', (req, res) => {
     }
 })
 
-/* //Authenticate with token
-function verifyToken(token, SECRET) {
-    if (!token) return { message: 'No token provided', status: 400, success: false }
-    return jwt.verify(token, SECRET, function (err, decoded) {
-        if (err) return { message: 'Error decoding token', status: 500, success: false }
-        else return { status: 200, id: decoded, auth: true }
-    })
-} */
-
 //Logout user
 router.get('/user/logout', (req, res) => {
     res.json({ auth: false, token: null, expiresIn: null })

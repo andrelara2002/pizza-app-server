@@ -40,6 +40,17 @@ const orderSchema = new mongoose.Schema({
     status: {
         type: String,
         default: 'pending'
+        /**
+         * Status:
+         * - pending
+         * - incoming
+         * - arrived
+         * - finished
+        */
+    },
+    active: {
+        type: Boolean,
+        default: true,
     }
 })
 
