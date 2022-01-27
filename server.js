@@ -3,9 +3,11 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const mongoose = require('mongoose');
 
+const settings = require('./settings.json')
+
 console.clear();
 
-mongoose.connect('mongodb://localhost:27017/user')
+mongoose.connect(settings.databaseLocation)
     .then(() => {
         console.log('Connected to database');
     })
@@ -22,15 +24,13 @@ const app = express();
 app.use(bodyParser.json());
 app.use(cors());
 
-const port = 3002;
-
 app.get('/', (req, res) => {
     res.send('Hello World!');
 })
 
-app.listen(port)
+app.listen(settings.port)
     .on('listening', () => {
-        console.log(`Server is running on port ${port}`);
+        console.log(`Server is running on port ${settings.port}`);
     })
     .on('error', err => {
         console.log(`Error running server: ${err}`);

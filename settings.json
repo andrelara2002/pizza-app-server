@@ -1,0 +1,6 @@
+{
+    "databaseLocation": "mongodb://localhost:27017/pizzaapp",
+    "port": 3002,
+    "jwtsecret": "pizzaapp@secret2022",
+    "jwtExpiration": 300
+}

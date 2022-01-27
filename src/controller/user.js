@@ -2,10 +2,13 @@ const express = require('express');
 
 const userModel = require('../model/user');
 const router = express.Router();
+const settings = require('../../settings.json')
 
 const jwt = require('jsonwebtoken')
-const SECRET = "RTXTITANV"
-const expires = 300 //Time to expires token in seconds
+const SECRET = settings.jwtsecret
+const expires = settings.jwtExpiration //Time to expires token in seconds
+
+const verifyToken = require('../services/validatejwt')
 
 const requestError = {
     success: false,
@@ -22,12 +25,13 @@ const internalError = {
 //Get all users
 router.get('/user', (req, res) => {
     const { token } = req.body;
-    const decoded = verifyToken(token)
+    const decoded = verifyToken(token, SECRET)
     if (decoded.status !== 200) res.json(decoded)
     else {
         userModel.find({}).then(users => {
             res.json(users);
         }).catch(err => {
+            console.log(err)
             res.json(internalError)
         })
     }
@@ -36,9 +40,9 @@ router.get('/user', (req, res) => {
 //Get user by id
 router.get('/user/findbyid', (req, res) => {
     const { token, id } = req.body;
-    const decoded = verifyToken(token);
+    const decoded = verifyToken(token, SECRET);
     if (decoded.status !== 200) res.json(decoded)
-    
+
     else userModel.findById(id, (err, user) => {
         if (err) res.json(internalError);
         else {
@@ -68,6 +72,7 @@ router.get('/user/login', (req, res) => {
             res.json({ message: "Invalid credential", status: 400, success: false })
         }
     }).catch(err => {
+        console.log(err)
         res.json(internalError)
     })
 })
@@ -75,28 +80,29 @@ router.get('/user/login', (req, res) => {
 router.get('/user/refreshtoken', (req, res) => {
     const { id, token } = req.body
     if (!token) res.send(requestError)
-    const isValid = verifyToken(token)
-    if (isValid.success !== 200) res.send({ success: false, message: "Token is too old, please login again", status: 400 })
-
-    const newToken = jwt.sign({ id }, SECRET, {
-        expiresIn: expires
-    })
-
-    res.json({
-        auth: true,
-        token: newToken,
-        expiresIn: expires
-    })
+    const isValid = verifyToken(token, SECRET)
+    console.log(isValid)
+    if (isValid.status !== 200) res.send({ success: false, message: "Token is too old, please login again", status: 400 })
+    else {
+        const newToken = jwt.sign({ id }, SECRET, {
+            expiresIn: expires
+        })
+        res.json({
+            auth: true,
+            token: newToken,
+            expiresIn: expires
+        })
+    }
 })
 
-//Authenticate with token
-function verifyToken(token) {
+/* //Authenticate with token
+function verifyToken(token, SECRET) {
     if (!token) return { message: 'No token provided', status: 400, success: false }
     return jwt.verify(token, SECRET, function (err, decoded) {
         if (err) return { message: 'Error decoding token', status: 500, success: false }
         else return { status: 200, id: decoded, auth: true }
     })
-}
+} */
 
 //Logout user
 router.get('/user/logout', (req, res) => {
@@ -147,7 +153,7 @@ router.put('/user', (req, res) => {
         token,
         id
     } = req.body;
-    const isValid = verifyToken(token);
+    const isValid = verifyToken(token, SECRET);
     if (isValid.status === 200) {
         userModel.findByIdAndUpdate(id, {
             name, email, password, document, phone, address, city, state, country, zip
