@@ -11,3 +11,5 @@ Entre os módulos utilizados estão:
 - Cors
 - Body parser
 - Json Web Token
+
+Em breve estarei publicando o front end da aplicação, que ainda estou decidindo se será em flutter ou react native
