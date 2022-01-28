@@ -162,6 +162,29 @@ router.put('/user', (req, res) => {
     }
 })
 
+//Insert payment method
+router.post('/addpayment', (req, res) => {
+    const { token, id, payment } = req.body
+    const isValid = verifyToken(token)
+    if (!id || !payment) res.json(requestError)
+    else if (isValid.status !== 200) res.json(isValid)
+    else {
+        userModel.findById(id).then(found => {
+            userModel.findByIdAndUpdate(id, {
+                paymentMethods: [...found.paymentMethods, payment]
+            }).then(() => {
+                res.json({ message: 'Payment method added', status: 200, success: true })
+            }).catch(err => {
+                console.log(err)
+                res.json(internalError)
+            })
+        }).catch(err => {
+            console.log(err)
+            res.json(internalError)
+        })
+    }
+})
+
 //Delete user by id
 router.delete('/user', (req, res) => {
     const { id } = req.body;

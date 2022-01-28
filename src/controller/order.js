@@ -133,6 +133,19 @@ router.delete('/order', (req, res) => {
         })
 })
 
+//Get active order
+router.get('/order/activeorder', (res, req) => {
+    const { user, token } = req.body
+    const isValid = verifyToken(token)
+    if (!user || !token) res.json(requestError);
+    else if (isValid.status !== 200) res.json(isValid)
+    else orderModel.find({ user: user, active: true },
+        (err, found) => {
+            if (err) res.json(internalError) && console.log(err)
+            else res.json(found)
+        })
+})
+
 //Finish an active order
 router.post('/order/finishorder', (req, res) => {
     const { id, token } = req.body
