@@ -31,3 +31,5 @@ Em breve estarei publicando o front end da aplicação, que ainda estou decidind
 - Criando função para decodificar os dados do token de usuário
 - Correção de bugs para recarregar token e verificação de token
 - Criação de arquivo "settings" para guardar as configurações gerais do servidor
+
+#Versão 0.3 (Prevista para 01/03/2022)
