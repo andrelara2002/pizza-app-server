@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const pizzaModel = require('../model/pizza');
+const verifyAndDecode = require('../services/validatejwt')
 
 const internalError = {
     success: false,
@@ -12,6 +13,12 @@ const requestError = {
     success: false,
     message: 'Error: Request error',
     status: 400
+}
+
+const permissionError = {
+    success: false,
+    message: 'Error: you do not have permission to this action',
+    status: 500
 }
 
 //Get all pizzas
@@ -54,40 +61,53 @@ router.get('/pizza/findbycategory', (req, res) => {
 
 //Add new pizza
 router.post('/pizza', (req, res) => {
-    const { name, description, price, image, category, ingredients, sizes } = req.body;
+    const { token, name, description, price, image, category, ingredients, sizes } = req.body;
+    const decoded = verifyAndDecode(token)
     if (!name) res.json(requestError)
-    pizzaModel.create({
+    else if (decoded === undefined) res.json(internalError)
+    else if (decoded.accessLevel === 3) pizzaModel.create({
         name, description, price, image, category, ingredients, sizes
     }).then(() => {
-        res.send(`Pizza adicionada: ${name}`, )
+        res.json({
+            message: `Pizza adicionada: ${name}`,
+            status: 200,
+            success: true
+        })
     }).catch(err => {
         res.json(internalError)
     })
+    else res.json(permissionError)
 })
 
 //Delete pizza
 router.delete('/pizza', (req, res) => {
-    const { id } = req.body
+    const { id, token } = req.body
+    const decoded = verifyAndDecode(token)
     if (!id) res.json(requestError)
-    pizzaModel.findByIdAndDelete(id)
+    else if (decoded === undefined) res.json(internalError)
+    else if (decoded.accessLevel === 3) pizzaModel.findByIdAndDelete(id)
         .then(() => {
             res.send(`Pizza deletada: ${id}`)
         })
         .catch(err => {
             res.json(internalError)
         })
+    else res.json(permissionError)
 })
 
 //Update pizza
 router.put('/pizza', (req, res) => {
-    const { name, description, price, image, category, ingredients, sizes, id } = req.body;
+    const { token, name, description, price, image, category, ingredients, sizes, id } = req.body;
+    const decoded = verifyAndDecode(token)
     if (!id) res.json(requestError)
-    pizzaModel.findByIdAndUpdate(id, {
+    else if (decoded === undefined) res.json(internalError)
+    else if (decoded.accessLevel === 3) pizzaModel.findByIdAndUpdate(id, {
         name, description, price, image, category, ingredients, sizes
     }, { new: true }, (err, pizza) => {
         if (err) res.json(internalError)
         else res.send(`Pizza ${pizza.name} changed`)
     })
+    else res.json(permissionError)
 })
 
 module.exports = router

@@ -8,7 +8,7 @@ const jwt = require('jsonwebtoken')
 const SECRET = settings.jwtsecret
 const expires = settings.jwtExpiration //Time to expires token in seconds
 
-const verifyToken = require('../services/validatejwt')
+const { verifyAndDecode, verifyToken } = require('../services/validatejwt')
 
 const requestError = {
     success: false,
@@ -25,35 +25,35 @@ const internalError = {
 //Get all users
 router.get('/user', (req, res) => {
     const { token } = req.body;
-    const decoded = verifyToken(token, SECRET)
-    if (decoded.status !== 200) res.json(decoded)
-    else {
+    const decoded = verifyAndDecode(token)
+    if (decoded === undefined) res.json(internalError)
+    else if (decoded.accessLevel === 3) {
         userModel.find({}).then(users => {
             res.json(users);
         }).catch(err => {
             console.log(err)
             res.json(internalError)
         })
+    } else {
+        res.json({ message: 'You do not have access to this operation' })
     }
 })
 
 //Get user by id
-router.get('/user/findbyid', (req, res) => {
-    const { token, id } = req.body;
-    const decoded = verifyToken(token, SECRET);
-    if (decoded.status !== 200) res.json(decoded)
-
-    else userModel.findById(id, (err, user) => {
+router.post('/user/findbyid', (req, res) => {
+    const { token } = req.body;
+    const decoded = verifyAndDecode(token);
+    if (decoded === undefined) {
+        res.json(internalError)
+    }
+    else userModel.findById(decoded.id, (err, user) => {
         if (err) res.json(internalError);
-        else {
-            const { name, email, document, phone, address, city, state, country, zip } = user
-            res.json({ name, email, document, phone, address, city, state, country, zip })
-        }
+        else res.json(user)
     });
 })
 
 //Get user by email or document and authenticate
-router.get('/user/login', (req, res) => {
+router.post('/user/login', (req, res) => {
     const { email, document, password } = req.body;
     if (!email && !document) res.json({ message: "Credential not defined" })
     let query;
@@ -63,7 +63,7 @@ router.get('/user/login', (req, res) => {
     userModel.find(query).then(user => {
         if (password === user[0].password) {
             const expiresIn = expires;
-            const token = jwt.sign({ id: user.id }, SECRET, {
+            const token = jwt.sign({ id: user[0].id, accessLevel: user[0].accessLevel }, SECRET, {
                 expiresIn: expiresIn
             })
             res.json({ status: 200, auth: true, token: token, expiresIn: expiresIn, id: user.id })
@@ -77,14 +77,13 @@ router.get('/user/login', (req, res) => {
     })
 })
 
-router.get('/user/refreshtoken', (req, res) => {
-    const { id, token } = req.body
+router.post('/user/refreshtoken', (req, res) => {
+    const { token } = req.body
     if (!token) res.send(requestError)
-    const isValid = verifyToken(token, SECRET)
-    console.log(isValid)
-    if (isValid.status !== 200) res.send({ success: false, message: "Token is too old, please login again", status: 400 })
+    const isValid = verifyAndDecode(token)
+    if (isValid === undefined) res.send({ success: false, message: "Token is too old, please login again", status: 400 })
     else {
-        const newToken = jwt.sign({ id }, SECRET, {
+        const newToken = jwt.sign({ id: isValid.id, accessLevel: isValid.accessLevel }, SECRET, {
             expiresIn: expires
         })
         res.json({
@@ -142,12 +141,13 @@ router.put('/user', (req, res) => {
         country,
         zip,
         token,
-        id
+        paymentMethods,
+        accessLevel
     } = req.body;
-    const isValid = verifyToken(token, SECRET);
-    if (isValid.status === 200) {
-        userModel.findByIdAndUpdate(id, {
-            name, email, password, document, phone, address, city, state, country, zip
+    const isValid = verifyAndDecode(token);
+    if (isValid !== undefined) {
+        userModel.findByIdAndUpdate(isValid.id, {
+            name, email, password, document, phone, address, city, state, country, zip, paymentMethods, accessLevel
         }, { new: true }, (err, user) => {
             console.log(user)
             if (err) res.json(internalError);
@@ -163,14 +163,14 @@ router.put('/user', (req, res) => {
 })
 
 //Insert payment method
-router.post('/addpayment', (req, res) => {
-    const { token, id, payment } = req.body
+router.post('/user/addpayment', (req, res) => {
+    const { token, payment } = req.body
     const isValid = verifyToken(token)
-    if (!id || !payment) res.json(requestError)
-    else if (isValid.status !== 200) res.json(isValid)
+    if (!payment) res.json(requestError)
+    else if (isValid === undefined) res.json(internalError)
     else {
-        userModel.findById(id).then(found => {
-            userModel.findByIdAndUpdate(id, {
+        userModel.findById(isValid.id).then(found => {
+            userModel.findByIdAndUpdate(isValid.id, {
                 paymentMethods: [...found.paymentMethods, payment]
             }).then(() => {
                 res.json({ message: 'Payment method added', status: 200, success: true })
@@ -187,11 +187,18 @@ router.post('/addpayment', (req, res) => {
 
 //Delete user by id
 router.delete('/user', (req, res) => {
-    const { id } = req.body;
-    userModel.findByIdAndDelete(id, (err, user) => {
+    const { token } = req.body;
+    const isValid = verifyAndDecode(token)
+    if (isValid === undefined) res.json(isValid)
+    else userModel.findByIdAndDelete(isValid.id, (err, user) => {
         if (err) res.json(internalError);
         res.json({ success: true, message: "User deleted" });
     })
+})
+
+router.get('/user/decodetoken', (req, res) => {
+    const { token } = req.body;
+    res.json(verifyAndDecode(token))
 })
 
 module.exports = router;

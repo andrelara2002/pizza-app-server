@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const esfirraModel = require('../model/esfirra');
+const verifyAndDecode = require('../services/validatejwt')
 
 const internalError = {
     success: false,
@@ -12,6 +13,12 @@ const requestError = {
     success: false,
     message: 'Error: Request error',
     status: 400
+}
+
+const permissionError = {
+    success: false,
+    message: 'Error, you do not have permission to do this action',
+    status: 500
 }
 
 //Get all esfirras
@@ -44,26 +51,33 @@ router.get('/esfirra/getbyname', (req, res) => {
 
 //Add new esfirra
 router.post('/esfirra', (req, res) => {
-    const { name, description, price, image, category, ingredients } = req.body;
+    const { token, name, description, price, image, category, ingredients } = req.body;
+    const decoded = verifyAndDecode(token)
     if (!name) res.json(requestError)
-    esfirraModel.create({
+    else if (decoded === undefined) res.json(internalError)
+    else if (decoded.accessLevel === 3) esfirraModel.create({
         name, description, price, image, category, ingredients
     }, (err, esfirra) => {
         if (err) res.json(internalError);
         else res.json(esfirra);
     })
+    else res.json(permissionError)
 })
 
 //Update esfirra
 router.put('/esfirra', (req, res) => {
-    const { id, name, description, price, image, category, ingredients } = req.body;
+    const { token, id, name, description, price, image, category, ingredients } = req.body;
+    const decoded = verifyAndDecode(token)
     if (!id) res.json(requestError);
-    esfirraModel.findByIdAndUpdate(id, {
-        name, description, price, image, category, ingredients
-    }, (result, err) => {
-        if (err) res.json(internalError)
-        else res.send(`Esfirra updated: ${name}`)
-    })
+    else if (decoded === undefined) res.json(internalError)
+    else if (decoded.accessLevel === 3)
+        esfirraModel.findByIdAndUpdate(id, {
+            name, description, price, image, category, ingredients
+        }, (result, err) => {
+            if (err) res.json(internalError)
+            else res.send(`Esfirra updated: ${name}`)
+        })
+    else res.json(permissionError)
 })
 
 //Delete esfirra

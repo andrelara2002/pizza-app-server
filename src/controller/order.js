@@ -2,7 +2,7 @@ const orderModel = require('../model/order');
 const express = require('express');
 
 const router = express.Router();
-const verifyToken = require('../services/validatejwt')
+const verifyAndDecode = require('../services/validatejwt')
 
 const internalError = {
     success: false,
@@ -18,17 +18,19 @@ const requestError = {
 
 //Create new order
 router.post('/order', (req, res) => {
-    const { user, email, document, address, city, zip, phone, items } = req.body;
+    const { token, email, document, address, city, zip, phone, items } = req.body;
     const date = new Date().getDate();
+    const decoded = verifyAndDecode(token)
 
     let total = 0;
     items.map(item => {
         total += item.price * item.quantity
     })
 
-    if (!user) res.json(requestError);
+    if (!token) res.json(requestError);
+    else if (decoded === undefined) res.json(internalError)
     else orderModel.create({
-        user, email, document, address, city, zip, phone, items, total, date
+        user: decoded.id, email, document, address, city, zip, phone, items, total, date
     }, (err, order) => {
         if (err) res.json(internalError);
         else res.json(order);
@@ -37,11 +39,11 @@ router.post('/order', (req, res) => {
 
 //Get all orders by date
 router.get('/order/filterbydate', (req, res) => {
-    const { date, user, token } = req.body;
-    const isValid = verifyToken(token)
-    if (!date || !user) res.json(requestError);
-    else if (isValid.status !== 200) res.json(isValid)
-    else orderModel.find({ date: date, user: user }, (err, orders) => {
+    const { date, token } = req.body;
+    const decoded = verifyAndDecode(token)
+    if (!date || !token) res.json(requestError);
+    else if (decoded === undefined) res.json(internalError)
+    else orderModel.find({ date: date, user: decoded.id }, (err, orders) => {
         if (err) res.json(internalError);
         else res.json(orders);
     })
@@ -49,23 +51,23 @@ router.get('/order/filterbydate', (req, res) => {
 
 //Get all orders by month
 router.get('/order/filterbymonth', (req, res) => {
-    const { month, user, token } = req.body;
+    const { month, token } = req.body;
     const isValid = verifyToken(token)
     if (!month) res.json(requestError);
-    else if (isValid.status !== 200) res.json(isValid)
-    else orderModel.find({ user: user, date: { $gte: new Date(month) } }, (err, orders) => {
+    else if (isValid === undefined) res.json(internalError)
+    else orderModel.find({ user: isValid.id, date: { $gte: new Date(month) } }, (err, orders) => {
         if (err) res.json(internalError);
         else res.json(orders);
     })
 })
 
-//Get all order
+//Get all order of the user
 router.get('/order', (req, res) => {
-    const { user, token } = req.body
-    const isValid = verifyToken(token)
-    if (!user) res.json(requestError)
-    else if (isValid.status !== 200) res.json(isValid)
-    else orderModel.find({ user: user }, (err, orders) => {
+    const { token } = req.body
+    const decoded = verifyAndDecode(token)
+    if (!token) res.json(requestError)
+    else if (decoded === undefined) res.json(decoded)
+    else orderModel.find({ user: decoded.id }, (err, orders) => {
         if (err) res.json(internalError)
         else res.json(orders)
     })
@@ -73,11 +75,11 @@ router.get('/order', (req, res) => {
 
 //Get order by id
 router.get('/order/getbyid', (req, res) => {
-    const { id, user, token } = req.body;
-    const isValid = verifyToken(token)
+    const { id, token } = req.body;
+    const decoded = verifyAndDecode(token)
     if (!id || !user) res.json(requestError);
-    else if (isValid.status !== 200) res.json(isValid)
-    else orderModel.find({ user: user, id: id }, (err, item) => {
+    else if (decoded === undefined) res.json(internalError)
+    else orderModel.find({ user: decoded.id, id: id }, (err, item) => {
         if (err) res.json(internalError);
         else res.json(item)
     })
@@ -85,15 +87,15 @@ router.get('/order/getbyid', (req, res) => {
 
 //Update the order status
 router.put('/order/changestatus', (req, res) => {
-    const { id, status, user, token } = req.body
-    const isValid = verifyToken(token)
+    const { id, status, token } = req.body
+    const isValid = verifyAndDecode(token)
     if (!id || !status) res.json(requestError)
-    else if (isValid.status !== 200) res.json(isValid)
+    else if (isValid.status === 200) res.json(internalError)
     else orderModel.findByIdAndUpdate(id, {
         status: status
     })
         .then(() => {
-            res.send(`Status changed to ${status}`)
+            res.json({ message: `Status changed to ${status}`, success: true, status: 200 })
         })
         .catch(err => {
             res.json(internalError)
@@ -103,10 +105,9 @@ router.put('/order/changestatus', (req, res) => {
 //Update the order
 router.put('/order', (req, res) => {
     const { token, id, user, email, document, address, city, zip, phone, items, status, active } = req.body;
-    const isValid = verifyToken(token)
-
+    const isValid = verifyAndDecode(token)
     if (!id) res.json(requestError)
-    else if (isValid.status !== 200) res.json(isValid)
+    else if (isValid.status === undefined) res.json(internalError)
     else {
         let total = 0;
         items.map(item => {
@@ -121,9 +122,9 @@ router.put('/order', (req, res) => {
 //Delete the order
 router.delete('/order', (req, res) => {
     const { id, token } = req.body;
-    const isValid = verifyToken(token)
+    const isValid = verifyAndDecode(token)
     if (!id) res.json(requestError)
-    else if (isValid.status !== 200) res.json(isValid)
+    else if (isValid === undefined) res.json(internalError)
     else orderModel.findByIdAndDelete(id)
         .then(() => {
             res.send(`Item ${id} deleted`)
@@ -135,13 +136,13 @@ router.delete('/order', (req, res) => {
 
 //Get active order
 router.get('/order/activeorder', (res, req) => {
-    const { user, token } = req.body
-    const isValid = verifyToken(token)
-    if (!user || !token) res.json(requestError);
-    else if (isValid.status !== 200) res.json(isValid)
-    else orderModel.find({ user: user, active: true },
+    const { token } = req.body
+    const isValid = verifyAndDecode(token)
+    if (!token) res.json(requestError);
+    else if (isValid === undefined) res.json(internalError)
+    else orderModel.find({ user: isValid.id, active: true },
         (err, found) => {
-            if (err) res.json(internalError) && console.log(err)
+            if (err) { res.json(internalError); console.log(err) }
             else res.json(found)
         })
 })
@@ -149,9 +150,9 @@ router.get('/order/activeorder', (res, req) => {
 //Finish an active order
 router.post('/order/finishorder', (req, res) => {
     const { id, token } = req.body
-    const isValid = verifyToken(token)
+    const isValid = verifyAndDecode(token)
     if (!id || !token) res.json(requestError)
-    else if (isValid.status !== 200) res.json(isValid)
+    else if (isValid === undefined) res.json(internalError)
     else orderModel.findByIdAndUpdate(id, {
         active: false,
         status: 'finished'
