@@ -13,6 +13,7 @@ Entre os módulos utilizados estão:
 - Json Web Token
 
 Em breve estarei publicando o front end da aplicação, que ainda estou decidindo se será em flutter ou react native
+[Front end: link](https://github.com/andrelara2002/pizza-app)
 
 #Versão 0.1
 - Estrutura base do projeto
