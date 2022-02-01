@@ -41,14 +41,17 @@ router.get('/user', (req, res) => {
 
 //Get user by id
 router.post('/user/findbyid', (req, res) => {
-    const { token } = req.body;
+    const { token, id } = req.body;
     const decoded = verifyAndDecode(token);
     if (decoded === undefined) {
         res.json(internalError)
     }
-    else userModel.findById(decoded.id, (err, user) => {
+    else userModel.findById(token ? decoded.id : id, (err, user) => {
         if (err) res.json(internalError);
-        else res.json(user)
+        else {
+            const { email, phone, address, city, state, country, zip, paymentMethods } = user
+            res.json({ email, phone, address, city, state, country, zip, paymentMethods })
+        }
     });
 })
 
@@ -66,10 +69,10 @@ router.post('/user/login', (req, res) => {
             const token = jwt.sign({ id: user[0].id, accessLevel: user[0].accessLevel }, SECRET, {
                 expiresIn: expiresIn
             })
-            res.json({ status: 200, auth: true, token: token, expiresIn: expiresIn, id: user.id })
+            res.json({ status: 200, token: token, expiresIn: expiresIn })
         }
         else {
-            res.json({ message: "Invalid credential", status: 400, success: false })
+            res.json({ message: "Invalid credential", status: 400 })
         }
     }).catch(err => {
         console.log(err)
@@ -87,7 +90,7 @@ router.post('/user/refreshtoken', (req, res) => {
             expiresIn: expires
         })
         res.json({
-            auth: true,
+            status: 200,
             token: newToken,
             expiresIn: expires
         })
@@ -96,7 +99,7 @@ router.post('/user/refreshtoken', (req, res) => {
 
 //Logout user
 router.get('/user/logout', (req, res) => {
-    res.json({ auth: false, token: null, expiresIn: null })
+    res.json({ token: null, expiresIn: null, id: null })
 })
 
 //Add new user

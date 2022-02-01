@@ -18,7 +18,7 @@ const requestError = {
 
 //Create new order
 router.post('/order', (req, res) => {
-    const { token, email, document, address, city, zip, phone, items } = req.body;
+    const { token, email, document, address, city, zip, phone, items } = req.body.order;
     const date = new Date().getDate();
     const decoded = verifyAndDecode(token)
 
@@ -62,7 +62,7 @@ router.get('/order/filterbymonth', (req, res) => {
 })
 
 //Get all order of the user
-router.get('/order', (req, res) => {
+router.post('/order', (req, res) => {
     const { token } = req.body
     const decoded = verifyAndDecode(token)
     if (!token) res.json(requestError)
@@ -74,7 +74,7 @@ router.get('/order', (req, res) => {
 })
 
 //Get order by id
-router.get('/order/getbyid', (req, res) => {
+router.post('/order/getbyid', (req, res) => {
     const { id, token } = req.body;
     const decoded = verifyAndDecode(token)
     if (!id || !user) res.json(requestError);
@@ -104,7 +104,7 @@ router.put('/order/changestatus', (req, res) => {
 
 //Update the order
 router.put('/order', (req, res) => {
-    const { token, id, user, email, document, address, city, zip, phone, items, status, active } = req.body;
+    const { token, id, user, email, document, address, city, zip, phone, items, status, active } = req.body.obj
     const isValid = verifyAndDecode(token)
     if (!id) res.json(requestError)
     else if (isValid.status === undefined) res.json(internalError)
@@ -135,7 +135,7 @@ router.delete('/order', (req, res) => {
 })
 
 //Get active order
-router.get('/order/activeorder', (res, req) => {
+router.post('/order/activeorder', (res, req) => {
     const { token } = req.body
     const isValid = verifyAndDecode(token)
     if (!token) res.json(requestError);

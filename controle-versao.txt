@@ -16,3 +16,5 @@
 - Criação de arquivo "settings" para guardar as configurações gerais do servidor
 
 #Versão 0.3 (Prevista para 01/03/2022)
+- Criação de rota para recuperar senha
+- Passagem de arquvios de "settings.json" para ".env"
