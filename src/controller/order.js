@@ -86,7 +86,7 @@ router.post('/order/getbyid', (req, res) => {
 })
 
 //Update the order status
-router.put('/order/changestatus', (req, res) => {
+router.patch('/order/changestatus', (req, res) => {
     const { id, status, token } = req.body
     const isValid = verifyAndDecode(token)
     if (!id || !status) res.json(requestError)

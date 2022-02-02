@@ -1,11 +1,12 @@
 const mongoose = require('mongoose');
 
-const pizza = {
+const item = {
     name: {
         type: String,
         required: true,
     },
     description: String,
+    type: { required: true, type: String },
     price: Number,
     image: String,
     category: String,
@@ -13,7 +14,7 @@ const pizza = {
     sizes: [String],
 }
 
-const pizzaSchema = new mongoose.Schema(pizza);
-const pizzaModel = mongoose.model('pizza', pizzaSchema);
+const itemSchema = new mongoose.Schema(item);
+const itemModel = mongoose.model('item', itemSchema);
 
-module.exports = pizzaModel;
+module.exports = itemModel;
