@@ -75,7 +75,6 @@ router.post('/user/login', (req, res) => {
             res.json({ message: "Invalid credential", status: 400 })
         }
     }).catch(err => {
-        console.log(err)
         res.json(internalError)
     })
 })
