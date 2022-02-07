@@ -58,25 +58,27 @@ router.post('/user/findbyid', (req, res) => {
 //Get user by email or document and authenticate
 router.post('/user/login', (req, res) => {
     const { email, document, password } = req.body;
-    if (!email && !document) res.json({ message: "Credential not defined" })
-    let query;
-    if (document) query = { document: document }
-    else query = { email: email }
+    if (!email && !document) res.json({ message: "Credential not defined", status: 400 })
+    else {
+        let query;
+        if (document) query = { document: document }
+        else query = { email: email }
 
-    userModel.find(query).then(user => {
-        if (password === user[0].password) {
-            const expiresIn = expires;
-            const token = jwt.sign({ id: user[0].id, accessLevel: user[0].accessLevel }, SECRET, {
-                expiresIn: expiresIn
-            })
-            res.json({ status: 200, token: token, expiresIn: expiresIn })
-        }
-        else {
-            res.json({ message: "Invalid credential", status: 400 })
-        }
-    }).catch(err => {
-        res.json(internalError)
-    })
+        userModel.find(query).then(user => {
+            if (password === user[0].password) {
+                const expiresIn = expires;
+                const token = jwt.sign({ id: user[0].id, accessLevel: user[0].accessLevel }, SECRET, {
+                    expiresIn: expiresIn
+                })
+                res.json({ status: 200, token: token, expiresIn: expiresIn })
+            }
+            else {
+                res.json({ message: "Invalid credential", status: 400 })
+            }
+        }).catch(err => {
+            res.json(internalError)
+        })
+    }
 })
 
 router.post('/user/refreshtoken', (req, res) => {

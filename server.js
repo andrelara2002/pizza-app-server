@@ -29,7 +29,7 @@ app.get('/', (req, res) => {
 
 app.listen(settings.port)
     .on('listening', () => {
-        console.log(`Server is running on port ${settings.port}`);
+        console.log(`Server is running on  ${settings.port}`);
     })
     .on('error', err => {
         console.log(`Error running server: ${err}`);
