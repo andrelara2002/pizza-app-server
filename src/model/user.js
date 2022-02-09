@@ -10,6 +10,7 @@ const user = {
     city: String,
     state: String,
     country: String,
+    neighborhood: String,
     zip: String,
     paymentMethods: [
         {

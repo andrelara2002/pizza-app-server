@@ -49,8 +49,17 @@ router.post('/user/findbyid', (req, res) => {
     else userModel.findById(token ? decoded.id : id, (err, user) => {
         if (err) res.json(internalError);
         else {
-            const { email, phone, address, city, state, country, zip, paymentMethods } = user
-            res.json({ email, phone, address, city, state, country, zip, paymentMethods })
+            const {
+                email, phone, address,
+                city, state, country,
+                zip, paymentMethods,
+                neighborhood, name } = user
+            res.json({
+                email, phone, address,
+                city, state, country,
+                zip, paymentMethods,
+                neighborhood, name
+            })
         }
     });
 })
