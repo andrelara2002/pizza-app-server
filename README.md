@@ -1,10 +1,10 @@
 # Pizza app server
-Servidor para o aplicativo demo de pizza que estou desenvolvendo.
+Server for the pizza demo application I am developing.
 ----------------------------------------------------------------
 
-Olá, estou desenvolvendo esse servidor para testar minhas habilidades em Node Js, criando uma conexão com um MongoDB. Através dessa api é possível realizar autenticações, requisições e alterações nos dados que estão no banco de dados. Foram aplicados conceitos de token também.
+Hello, I am developing this server to test my Node Js skills, creating a connection with a MongoDB. Through this API, it is possible to perform authentication, requests, and changes to the data that is in the database. Token concepts have also been applied.
 
-Entre os módulos utilizados estão:
+Among the modules used are:
 - Nodemon
 - Express
 - Mongoose
@@ -12,24 +12,22 @@ Entre os módulos utilizados estão:
 - Body parser
 - Json Web Token
 
-Em breve estarei publicando o front end da aplicação, que ainda estou decidindo se será em flutter ou react native
+Soon I will be publishing the frontend of the application, which I am still deciding whether it will be in flutter or react native.
 [Front end: link](https://github.com/andrelara2002/pizza-app)
 
-#Versão 0.1
-- Estrutura base do projeto
-- Configuração e conexão com o banco de dados
-- Divisão da estrutura de rotas em: User, Pizza, Esfirra, Order
-- Primeiras rotas e estrutura de Busca de itens por "id" e "nome"
+#Version 0.1
+- Base project structure
+- Configuration and connection to the database
+- Division of route structure into: User, Pizza, Esfirra, Order
+- First routes and structure of searching for items by "id" and "name"
 
-#Versão 0.2 (Atual)
-- Adição de tokens para realizar as autenticações
-- Exigindo tokens de usuários para realizar atividades de cadastro e gerenciamento
-- Codificando "id de usuário", junto com "nível de acesso" para não ser necessário a busca no banco para autenticar usuário
-- Implementando níveis de acesso para funções de gerenciamento da aplicação
-- Definindo níveis de acesso para: 1) Usuário comum, 2) Funcionários e suporte, 3) Administradores do sistema
-- Corrigindo rotas "GET" que recebiam requests para "POST", assim, todas as funções get não precisam enviar parâmetros
-- Criando função para decodificar os dados do token de usuário
-- Correção de bugs para recarregar token e verificação de token
-- Criação de arquivo "settings" para guardar as configurações gerais do servidor
-
-#Versão 0.3 (Prevista para 01/03/2022)
+#Version 0.2 (Current)
+- Addition of tokens to perform authentication
+- Requiring user tokens to perform registration and management activities
+- Encoding "user id", along with "access level" to avoid searching the database to authenticate the user
+- Implementing access levels for application management functions
+- Defining access levels for: 1) Common users, 2) Employees and support, 3) System administrators
+- Fixing "GET" routes that received requests for "POST", so all get functions do not need to send parameters
+- Creating a function to decode user token data
+- Bug fixes for reloading tokens and token verification
+- Creating a "settings" file to store general server configurations
